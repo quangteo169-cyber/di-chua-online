@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chùa Online 🏮 – Thắp Hương Cầu Bình An</title>
+<meta name="description" content="Chùa online – thắp hương, gõ mõ, cầu nguyện bình an cho gia đình."/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏮</text></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ===================== RESET & BASE ===================== */
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Be Vietnam Pro',sans-serif;
+  background:#0e0500;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ===================== BACKGROUND ===================== */
+.bg-layer{
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%,#3d1400 0%,#170700 55%,#080200 100%);
+  z-index:0;pointer-events:none;
+}
+.stars-canvas{position:fixed;inset:0;z-index:1;pointer-events:none;}
+
+/* ===================== LAYOUT ===================== */
+.page{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;
+  padding:0 12px 48px;
+  min-height:100vh;
+}
+
+/* ===================== HEADER ===================== */
+.header{text-align:center;padding:28px 16px 10px;}
+.header-title{
+  color:#ffd97d;font-size:clamp(20px,5vw,28px);font-weight:700;
+  letter-spacing:.08em;text-shadow:0 0 28px #ffaa0088;
+  animation:fadeDown .8s ease both;
+}
+.header-sub{
+  color:#c9a84c66;font-size:11px;letter-spacing:.22em;margin-top:4px;
+  animation:fadeDown .8s .15s ease both;
+}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+
+/* ===================== ALTAR WRAPPER ===================== */
+.altar-wrap{
+  width:min(500px,96vw);
+  animation:fadeUp .9s .2s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+.altar-box{
+  background:#230b00;
+  border:2px solid #8B5500;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:
+    inset 0 2px 0 #ffd97d1a,
+    0 8px 48px #00000099,
+    0 0 0 1px #3a1800;
+}
+
+/* ---- Hoành phi ---- */
+.hphi{
+  background:#7a1500;
+  border-bottom:2px solid #ffd97d44;
+  text-align:center;
+  padding:10px 14px 7px;
+  position:relative;
+}
+.hphi::before,.hphi::after{
+  content:'';position:absolute;top:50%;
+  width:30px;height:1.5px;background:#ffd97d44;
+}
+.hphi::before{left:14px}.hphi::after{right:14px}
+.hphi-txt{color:#ffd97d;font-size:15px;font-weight:700;letter-spacing:.2em;}
+.hphi-sub{color:#ffd97d66;font-size:10px;letter-spacing:.25em;margin-top:3px;}
+
+/* ---- Body row ---- */
+.body-row{display:flex;align-items:stretch;gap:0;padding:12px 10px 0;}
+.cau-doi{
+  background:#600f00;border:1px solid #ffd97d2a;border-radius:4px;
+  width:22px;writing-mode:vertical-rl;
+  display:flex;align-items:center;justify-content:center;
+  padding:10px 3px;color:#ffd97dbb;font-size:10px;font-weight:600;
+  letter-spacing:.08em;flex-shrink:0;
+}
+.mid{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 10px;}
+
+/* ---- Photo tier ---- */
+.photo-row{display:flex;justify-content:center;align-items:flex-end;gap:14px;}
+.pframe{
+  border:2px solid #ffd97d;border-radius:6px;
+  background:#180600;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;cursor:pointer;flex-shrink:0;
+  transition:border-color .2s,box-shadow .2s;
+}
+.pframe:hover{border-color:#fff9a0;box-shadow:0 0 16px #ffd97d44;}
+.pframe img{width:100%;height:100%;object-fit:cover;display:none;}
+.pframe .ph{color:#ffd97d66;font-size:10px;text-align:center;line-height:1.7;padding:5px;}
+.pframe .ehint{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(0,0,0,.7);color:#ffd97d;
+  font-size:9px;text-align:center;padding:3px 0;
+  opacity:0;transition:opacity .2s;
+}
+.pframe:hover .ehint{opacity:1;}
+.main-frame{width:82px;height:96px;}
+.side-frame{width:54px;height:66px;border-width:1.5px;}
+#imgInput{display:none;}
+
+/* ---- Candle / Binh / Lu row ---- */
+.icf-row{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  width:100%;padding:0 2px;
+}
+.cnd{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:opacity .2s;}
+.cnd:hover{opacity:.85;}
+.cbody{width:14px;height:38px;background:#f0deb0;border-radius:2px 2px 1px 1px;position:relative;}
+.flame{
+  width:9px;height:14px;border-radius:50% 50% 40% 40%;
+  background:#ff8c00;box-shadow:0 0 8px 4px #ff880055;
+  position:absolute;top:-13px;left:2px;
+  animation:fl .42s infinite alternate;
+  transition:opacity .3s;
+}
+.flame.off{opacity:0;pointer-events:none;}
+@keyframes fl{0%{transform:scaleX(1)}100%{transform:scaleX(.76) scaleY(1.12)}}
+.cplate{width:20px;height:5px;background:#aa8800;border-radius:2px;}
+
+.binh{display:flex;flex-direction:column;align-items:center;}
+.binh-flowers{font-size:16px;line-height:1;margin-bottom:1px;}
+.binh-neck{width:14px;height:5px;background:#1a5577;border-radius:2px;border:1px solid #ffd97d22;}
+.binh-body-v{width:20px;height:30px;background:#1e6688;border-radius:2px 2px 5px 5px;border:1px solid #ffd97d22;}
+
+/* ---- LƯ HƯƠNG ---- */
+.lu-wrap{display:flex;flex-direction:column;align-items:center;position:relative;}
+.smoke-col{
+  position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;pointer-events:none;z-index:10;
+  align-items:flex-end;height:70px;
+}
+.smk{width:3px;opacity:0;border-left:2px dashed rgba(210,190,150,.28);height:0;border-radius:1px;}
+.smk.on{opacity:1;animation:sr 2.1s ease-in-out infinite alternate;}
+.smk:nth-child(2){animation-delay:.55s}
+.smk:nth-child(3){animation-delay:1.1s}
+@keyframes sr{0%{height:0;transform:translateX(-3px)}100%{height:52px;transform:translateX(6px);opacity:.1}}
+.lu-rim{width:60px;height:12px;background:#6B3A00;border-radius:4px 4px 0 0;border:1.5px solid #ffd97d55;border-bottom:none;}
+.lu-body-v{
+  width:56px;height:40px;background:#4a2200;
+  border:1.5px solid #ffd97d55;border-radius:0 0 16px 16px;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:5px;gap:5px;overflow:visible;position:relative;
+}
+.lu-sand{position:absolute;bottom:5px;left:7px;right:7px;height:11px;background:#8B6914;border-radius:50%;z-index:0;}
+.inc-cot{
+  width:3px;border-radius:1px 1px 0 0;
+  background:#7a3e18;position:relative;z-index:1;
+  animation:incGrow .4s ease-out both;
+}
+@keyframes incGrow{from{height:0}to{height:var(--h)}}
+.inc-ember{
+  width:7px;height:7px;border-radius:50%;
+  position:absolute;top:-4px;left:-2px;
+  background:#ff8800;box-shadow:0 0 7px 3px #ff880077;
+  animation:emberPulse 1.5s infinite alternate;
+}
+@keyframes emberPulse{0%{box-shadow:0 0 5px 2px #ff880055}100%{box-shadow:0 0 10px 5px #ff880099}}
+.lu-leg-v{width:60px;height:10px;background:#3a1800;border-radius:0 0 6px 6px;border:1.5px solid #ffd97d44;border-top:none;}
+.lu-base{width:46px;height:6px;background:#2a1000;border-radius:2px;}
+
+/* ---- Mâm ngũ quả ---- */
+.mam-lbl{color:#ffd97d44;font-size:8px;letter-spacing:.22em;margin-top:2px;}
+.mam{
+  background:#500f00;border:1.5px solid #ffd97d33;border-radius:50%;
+  width:200px;height:58px;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  position:relative;box-shadow:0 5px 0 #2e0800;
+}
+.mam::after{
+  content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+  width:178px;height:7px;background:#2e0800;border-radius:50%;
+}
+.fi{font-size:22px;filter:drop-shadow(0 1px 3px #00000077);}
+
+/* ---- Bàn gỗ ---- */
+.ban-mat-v{
+  background:#4e1e00;border:1.5px solid #ffd97d44;
+  border-radius:3px 3px 0 0;height:17px;margin:14px 0 0;
+  position:relative;
+}
+.ban-mat-v::before{content:'';position:absolute;top:4px;left:16px;right:16px;height:1px;background:#ffd97d18;}
+.ban-vai{height:10px;background:#800000;border:1px solid #ffd97d2a;border-top:none;}
+.ban-chans{display:flex;justify-content:space-between;padding:0 20px;}
+.ban-chan-v{width:10px;height:46px;background:#3c1500;border-radius:0 0 3px 3px;border:1px solid #ffd97d22;border-top:none;}
+
+/* ===================== MÕ ===================== */
+.mo-section{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin-top:20px;
+  animation:fadeUp .9s .35s ease both;
+}
+.mo-wrap{
+  position:relative;cursor:pointer;user-select:none;
+  transition:transform .08s;
+}
+.mo-wrap:active{transform:scale(.92);}
+.mo-svg{width:90px;height:90px;}
+.dui-g{transform-origin:80px 14px;transform:rotate(0deg);transition:transform .12s ease-out;}
+.dui-g.hit{transform:rotate(30deg);}
+.mo-label{color:#ffd97daa;font-size:11px;letter-spacing:.12em;text-align:center;}
+@keyframes moShake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-5px) rotate(-3deg)}
+  40%{transform:translateX(4px) rotate(2deg)}
+  60%{transform:translateX(-3px)}
+  80%{transform:translateX(2px)}
+}
+.mo-wrap.shake{animation:moShake .45s ease-out;}
+
+/* ===================== BUTTONS ===================== */
+.btn-row{
+  display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;justify-content:center;
+  animation:fadeUp .9s .4s ease both;
+}
+.mbtn{
+  background:#7a1500;
+  border:1.5px solid #ffd97d77;border-radius:26px;
+  padding:13px 30px;color:#ffd97d;
+  font-size:15px;font-weight:700;
+  font-family:'Be Vietnam Pro',sans-serif;cursor:pointer;
+  letter-spacing:.04em;
+  box-shadow:0 4px 20px #00000055, 0 0 0 1px #ffd97d22;
+  transition:transform .12s,background .15s,box-shadow .15s;
+}
+.mbtn:hover{background:#9a1f00;transform:translateY(-2px);box-shadow:0 7px 24px #00000066,0 0 0 1px #ffd97d44;}
+.mbtn:active{transform:scale(.97);}
+.sbtn{
+  background:transparent;border:1px solid #ffd97d33;border-radius:20px;
+  padding:11px 20px;color:#ffd97d88;
+  font-size:13px;font-family:'Be Vietnam Pro',sans-serif;cursor:pointer;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.sbtn:hover{background:#ffd97d0f;color:#ffd97d;border-color:#ffd97d66;}
+
+/* ===================== COUNTER ===================== */
+.cnt-row{
+  display:flex;gap:28px;margin-top:16px;
+  animation:fadeUp .9s .5s ease both;
+}
+.cnt{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.cnt-n{color:#ffd97d;font-size:20px;font-weight:700;}
+.cnt-l{color:#ffd97d44;font-size:9px;letter-spacing:.12em;}
+
+/* ===================== WISH ===================== */
+.wish-section{
+  margin-top:18px;width:min(400px,92vw);
+  animation:fadeUp .9s .6s ease both;
+}
+.wish-section textarea{
+  width:100%;
+  background:rgba(255,255,255,.05);
+  border:1px solid #ffd97d2a;border-radius:12px;
+  color:#ffecc0;font-size:13px;
+  padding:12px 14px;
+  font-family:'Be Vietnam Pro',sans-serif;
+  resize:none;height:72px;outline:none;
+  transition:border-color .2s;
+}
+.wish-section textarea::placeholder{color:#ffd97d25;}
+.wish-section textarea:focus{border-color:#ffd97d55;}
+.wbtn{
+  margin-top:8px;width:100%;
+  background:transparent;border:1px solid #ffd97d2a;border-radius:10px;
+  padding:10px;color:#ffd97d88;
+  font-size:13px;font-family:'Be Vietnam Pro',sans-serif;
+  cursor:pointer;transition:background .2s,color .2s,border-color .2s;
+}
+.wbtn:hover{background:#ffd97d0f;color:#ffd97d;border-color:#ffd97d44;}
+.wlist{margin-top:8px;max-height:90px;overflow-y:auto;}
+.witem{
+  background:#ffd97d07;border-radius:8px;
+  padding:6px 11px;margin-bottom:5px;
+  color:#ffda80;font-size:12px;
+  display:flex;gap:8px;align-items:flex-start;
+  animation:fadeUp .4s ease both;
+}
+
+/* ===================== TOAST ===================== */
+.toast{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(10,2,0,.97);
+  border:1px solid #ffd97d44;border-radius:16px;
+  padding:16px 24px;color:#ffd97d;
+  font-size:14px;text-align:center;
+  z-index:9999;max-width:280px;
+  pointer-events:none;line-height:1.75;
+  white-space:pre-line;
+  animation:toastIn 3s forwards;
+}
+@keyframes toastIn{
+  0%{opacity:0;transform:translate(-50%,-60%)}
+  12%{opacity:1;transform:translate(-50%,-50%)}
+  75%{opacity:1;transform:translate(-50%,-50%)}
+  100%{opacity:0;transform:translate(-50%,-44%)}
+}
+
+/* ===================== YOUTUBE ===================== */
+#ytf{display:none;position:fixed;width:1px;height:1px;bottom:0;right:0;}
+
+/* ===================== MUSIC BAR ===================== */
+.music-bar{
+  display:none;align-items:center;gap:8px;
+  margin-top:12px;color:#c9a84c;font-size:11px;
+  animation:fadeUp .5s ease both;
+}
+.music-bar.on{display:flex;}
+.mdot{width:7px;height:7px;border-radius:50%;background:#ffd97d;}
+.mdot.pulse{animation:mdotPulse 1s infinite alternate;}
+@keyframes mdotPulse{0%{box-shadow:0 0 0 0 #ffd97d88}100%{box-shadow:0 0 0 6px #ffd97d00}}
+
+/* ===================== RESPONSIVE ===================== */
+@media(max-width:400px){
+  .main-frame{width:68px;height:80px;}
+  .side-frame{width:46px;height:56px;}
+  .mam{width:170px;height:50px;}
+  .fi{font-size:18px;}
+  .cau-doi{font-size:9px;width:18px;}
+}
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<canvas class="stars-canvas" id="starsCanvas"></canvas>
+<iframe id="ytf" src="" allow="autoplay;encrypted-media" allowfullscreen></iframe>
+
+<div class="page">
+  <div class="header">
+    <div class="header-title">🏮 Chùa Online</div>
+    <div class="header-sub">NAM MÔ A DI ĐÀ PHẬT</div>
+  </div>
+
+  <!-- ===== BÀN THỜ ===== -->
+  <div class="altar-wrap">
+    <div class="altar-box">
+
+      <!-- Hoành phi -->
+      <div class="hphi">
+        <div class="hphi-txt">Nam Mô A Di Đà Phật</div>
+        <div class="hphi-sub">🪷 &nbsp; 🙏 &nbsp; 🪷</div>
+      </div>
+
+      <!-- Câu đối + nội dung -->
+      <div class="body-row">
+        <div class="cau-doi">Phúc như đông hải</div>
+
+        <div class="mid">
+          <!-- Ảnh thờ -->
+          <div class="photo-row">
+            <div class="pframe side-frame">
+              <div class="ph">🙏</div>
+            </div>
+            <div class="pframe main-frame" id="mainFrame" onclick="document.getElementById('imgInput').click()" title="Bấm để thay ảnh">
+              <img id="phatImg" src="" alt="Ảnh thờ"/>
+              <div class="ph" id="phatPh">🙏<br><small>Bấm thay ảnh</small></div>
+              <div class="ehint">✎ Thay ảnh</div>
+            </div>
+            <div class="pframe side-frame">
+              <div class="ph">🙏</div>
+            </div>
+          </div>
+          <input type="file" id="imgInput" accept="image/*" onchange="loadImg(event)"/>
+
+          <!-- Nến + Bình + Lư -->
+          <div class="icf-row">
+            <div class="cnd" onclick="toggleCnd(0)" title="Bật/tắt nến">
+              <div class="cbody"><div class="flame" id="f0"></div></div>
+              <div class="cplate"></div>
+            </div>
+
+            <div class="binh">
+              <div class="binh-flowers">🌺🌸</div>
+              <div class="binh-neck"></div>
+              <div class="binh-body-v"></div>
+            </div>
+
+            <!-- Lư hương -->
+            <div class="lu-wrap">
+              <div class="smoke-col" id="smokeCol">
+                <div class="smk" id="sk0"></div>
+                <div class="smk" id="sk1"></div>
+                <div class="smk" id="sk2"></div>
+              </div>
+              <div class="lu-rim"></div>
+              <div class="lu-body-v" id="luBody">
+                <div class="lu-sand"></div>
+              </div>
+              <div class="lu-leg-v"></div>
+              <div class="lu-base"></div>
+            </div>
+
+            <div class="binh">
+              <div class="binh-flowers">🌸🌺</div>
+              <div class="binh-neck"></div>
+              <div class="binh-body-v"></div>
+            </div>
+
+            <div class="cnd" onclick="toggleCnd(1)" title="Bật/tắt nến">
+              <div class="cbody"><div class="flame" id="f1"></div></div>
+              <div class="cplate"></div>
+            </div>
+          </div>
+
+          <!-- Mâm ngũ quả -->
+          <div class="mam-lbl">— MÂM NGŨ QUẢ —</div>
+          <div class="mam">
+            <span class="fi">🍊</span>
+            <span class="fi">🍎</span>
+            <span class="fi" style="font-size:26px">🍌</span>
+            <span class="fi">🍇</span>
+            <span class="fi">🍑</span>
+          </div>
+        </div>
+
+        <div class="cau-doi">Thọ tựa nam sơn</div>
+      </div>
+
+      <!-- Bàn gỗ -->
+      <div class="ban-mat-v" style="margin:14px 10px 0;"></div>
+      <div class="ban-vai" style="margin:0 10px;"></div>
+      <div class="ban-chans" style="padding:0 22px;">
+        <div class="ban-chan-v"></div>
+        <div class="ban-chan-v"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MÕ ===== -->
+  <div class="mo-section">
+    <div class="mo-wrap" id="moWrap" onclick="goMo()" title="Gõ mõ">
+      <svg class="mo-svg" viewBox="0 0 90 90">
+        <!-- dùi -->
+        <g class="dui-g" id="duiG">
+          <rect x="58" y="10" width="26" height="5" rx="2.5" fill="#8B5E00" stroke="#ffd97d55" stroke-width=".5"/>
+          <circle cx="82" cy="12.5" r="5.5" fill="#7a3e00" stroke="#ffd97d66" stroke-width=".6"/>
+        </g>
+        <!-- mõ thân -->
+        <ellipse cx="38" cy="54" rx="28" ry="22" fill="#5C2E00" stroke="#ffd97d77" stroke-width="1.5"/>
+        <ellipse cx="38" cy="52" rx="22" ry="15" fill="#3d1e00" stroke="#ffd97d44" stroke-width="1"/>
+        <ellipse cx="38" cy="51" rx="13" ry="8" fill="#2a1200" stroke="#ffd97d22" stroke-width=".5"/>
+        <!-- khe nứt -->
+        <path d="M24 54 Q38 47 52 54" stroke="#ffd97d33" stroke-width="1.2" fill="none"/>
+        <!-- đế -->
+        <rect x="16" y="73" width="44" height="8" rx="3" fill="#4a1e00" stroke="#ffd97d44" stroke-width=".8"/>
+        <rect x="21" y="79" width="34" height="4" rx="2" fill="#3a1500" stroke="#ffd97d33" stroke-width=".5"/>
+      </svg>
+      <div class="mo-label">🥢 Gõ mõ</div>
+    </div>
+  </div>
+
+  <!-- Chỉ báo nhạc -->
+  <div class="music-bar" id="musicBar">
+    <div class="mdot" id="mdot"></div>
+    <span id="musicTxt">Nhạc thiền đang phát...</span>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btn-row">
+    <button class="mbtn" onclick="thapHuong()">🔔 Lạy Phật — Thắp Hương</button>
+    <button class="sbtn" id="musicBtn" onclick="toggleMusic()">🎵 Bật nhạc thiền</button>
+  </div>
+
+  <!-- Đếm -->
+  <div class="cnt-row">
+    <div class="cnt"><div class="cnt-n" id="cBell">0</div><div class="cnt-l">LẦN LẠY</div></div>
+    <div class="cnt"><div class="cnt-n" id="cInc">0</div><div class="cnt-l">NÉN HƯƠNG</div></div>
+    <div class="cnt"><div class="cnt-n" id="cMo">0</div><div class="cnt-l">TIẾNG MÕ</div></div>
+    <div class="cnt"><div class="cnt-n" id="cWish">0</div><div class="cnt-l">LỜI CẦU</div></div>
+  </div>
+
+  <!-- Lời cầu nguyện -->
+  <div class="wish-section">
+    <textarea id="wishInput" placeholder="🙏 Gõ lời cầu nguyện của bạn vào đây..."></textarea>
+    <button class="wbtn" onclick="addWish()">🌸 Gửi lời cầu nguyện lên Phật</button>
+  </div>
+  <div class="wlist" id="wlist" style="width:min(400px,92vw)"></div>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+============================================================ */
+let bells = 0, incN = 0, moN = 0, wishes = 0;
+let musicOn = false;
+let cndOn = [true, true];
+const MAX_INC = 9;
+const PRAYERS = [
+  '🙏 Nam mô A Di Đà Phật\nPhật gia hộ bình an, sức khoẻ!',
+  '🌸 Nam mô Quan Thế Âm Bồ Tát\nXin gia trì gia đình an lạc!',
+  '🏮 Công đức thắp hương\nPhước lành lan toả muôn nơi!',
+  '🪷 Nam mô Địa Tạng Vương Bồ Tát\nMọi chúng sinh đều được bình an!',
+  '✨ Tam bảo chứng minh\nNguyện cầu vạn sự như ý!'
+];
+let prayerIdx = 0;
+
+/* ============================================================
+   STARS
+============================================================ */
+(function initStars() {
+  const canvas = document.getElementById('starsCanvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 80; i++) {
+    stars.push({
+      x: Math.random(),
+      y: Math.random() * 0.6,
+      r: Math.random() * 1.3 + 0.3,
+      a: Math.random(),
+      speed: Math.random() * 0.008 + 0.004,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const alpha = 0.1 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,248,220,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ============================================================
+   CANDLE
+============================================================ */
+function toggleCnd(i) {
+  cndOn[i] = !cndOn[i];
+  document.getElementById('f' + i).classList.toggle('off', !cndOn[i]);
+}
+
+/* ============================================================
+   THẮP HƯƠNG
+============================================================ */
+function thapHuong() {
+  bells++;
+  document.getElementById('cBell').textContent = bells;
+
+  addIncToLu();
+  litSmoke();
+  if (!musicOn) startMusic();
+  playSound('bell');
+  showToast(PRAYERS[prayerIdx++ % PRAYERS.length]);
+}
+
+function addIncToLu() {
+  if (incN >= MAX_INC) return;
+  const lu = document.getElementById('luBody');
+  const h = 18 + Math.floor(Math.random() * 14);
+  const stick = document.createElement('div');
+  stick.className = 'inc-cot';
+  stick.style.cssText = `--h:${h}px;height:${h}px;width:3px;border-radius:1px 1px 0 0;background:#7a3e18;position:relative;z-index:1;`;
+  const ember = document.createElement('div');
+  ember.className = 'inc-ember';
+  stick.appendChild(ember);
+  lu.appendChild(stick);
+  incN++;
+  document.getElementById('cInc').textContent = incN;
+}
+
+function litSmoke() {
+  document.getElementById('sk0').classList.add('on');
+  document.getElementById('sk1').classList.add('on');
+  document.getElementById('sk2').classList.add('on');
+}
+
+/* ============================================================
+   GÕ MÕ
+============================================================ */
+function goMo() {
+  moN++;
+  document.getElementById('cMo').textContent = moN;
+
+  const wrap = document.getElementById('moWrap');
+  const dui = document.getElementById('duiG');
+
+  wrap.classList.remove('shake');
+  void wrap.offsetWidth;
+  wrap.classList.add('shake');
+  setTimeout(() => wrap.classList.remove('shake'), 460);
+
+  dui.classList.add('hit');
+  setTimeout(() => dui.classList.remove('hit'), 160);
+
+  playSound('mo');
+}
+
+/* ============================================================
+   SOUND
+============================================================ */
+function playSound(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (type === 'bell') {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(528, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(380, ctx.currentTime + 2.2);
+      g.gain.setValueAtTime(0.3, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3.5);
+      o.start(); o.stop(ctx.currentTime + 3.5);
+    } else {
+      // Mõ: sine bass + percussive click
+      [[220, 0.2], [330, 0.1]].forEach(([freq, vol]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine'; o.frequency.value = freq;
+        g.gain.setValueAtTime(vol, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        o.start(); o.stop(ctx.currentTime + 0.65);
+      });
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++)
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 4) * 0.4;
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.connect(ctx.destination); src.start();
+    }
+  } catch (e) { /* browser blocked */ }
+}
+
+/* ============================================================
+   MUSIC
+============================================================ */
+function startMusic() {
+  musicOn = true;
+  const f = document.getElementById('ytf');
+  f.src = 'https://www.youtube.com/embed/yh2h_YwILII?autoplay=1&loop=1&playlist=yh2h_YwILII&enablejsapi=1';
+  f.style.display = 'block';
+  document.getElementById('musicBtn').textContent = '🔇 Tắt nhạc';
+  const bar = document.getElementById('musicBar');
+  bar.classList.add('on');
+  document.getElementById('mdot').classList.add('pulse');
+}
+
+function toggleMusic() {
+  if (!musicOn) {
+    startMusic();
+  } else {
+    musicOn = false;
+    const f = document.getElementById('ytf');
+    f.src = ''; f.style.display = 'none';
+    document.getElementById('musicBtn').textContent = '🎵 Bật nhạc thiền';
+    document.getElementById('musicBar').classList.remove('on');
+    document.getElementById('mdot').classList.remove('pulse');
+  }
+}
+
+/* ============================================================
+   WISH
+============================================================ */
+function addWish() {
+  const inp = document.getElementById('wishInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  wishes++;
+  document.getElementById('cWish').textContent = wishes;
+  const list = document.getElementById('wlist');
+  const item = document.createElement('div');
+  item.className = 'witem';
+  item.innerHTML = `<span>🪷</span><span>${escHtml(txt)}</span>`;
+  list.prepend(item);
+  inp.value = '';
+  showToast('🙏 Lời cầu nguyện đã được gửi lên Phật!');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ============================================================
+   IMAGE UPLOAD
+============================================================ */
+function loadImg(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('phatImg');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    document.getElementById('phatPh').style.display = 'none';
+    showToast('✨ Ảnh đã được cập nhật lên bàn thờ!');
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ============================================================
+   TOAST
+============================================================ */
+function showToast(msg) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3100);
+}
+</script>
+</body>
+</html>
