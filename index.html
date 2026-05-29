@@ -366,19 +366,25 @@ body{
         <div class="mid">
           <!-- Ảnh thờ -->
           <div class="photo-row">
-            <div class="pframe side-frame">
-              <div class="ph">🙏</div>
+            <div class="pframe side-frame" onclick="document.getElementById('imgL').click()" title="Bấm để thay ảnh">
+              <img id="imgLeftImg" src="" alt="Ảnh trái"/>
+              <div class="ph" id="phL">🙏<br><small>Thay ảnh</small></div>
+              <div class="ehint">✎ Thay ảnh</div>
             </div>
-            <div class="pframe main-frame" id="mainFrame" onclick="document.getElementById('imgInput').click()" title="Bấm để thay ảnh">
+            <div class="pframe main-frame" onclick="document.getElementById('imgM').click()" title="Bấm để thay ảnh">
               <img id="phatImg" src="" alt="Ảnh thờ"/>
               <div class="ph" id="phatPh">🙏<br><small>Bấm thay ảnh</small></div>
               <div class="ehint">✎ Thay ảnh</div>
             </div>
-            <div class="pframe side-frame">
-              <div class="ph">🙏</div>
+            <div class="pframe side-frame" onclick="document.getElementById('imgR').click()" title="Bấm để thay ảnh">
+              <img id="imgRightImg" src="" alt="Ảnh phải"/>
+              <div class="ph" id="phR">🙏<br><small>Thay ảnh</small></div>
+              <div class="ehint">✎ Thay ảnh</div>
             </div>
           </div>
-          <input type="file" id="imgInput" accept="image/*" onchange="loadImg(event)"/>
+          <input type="file" id="imgL" accept="image/*" onchange="loadImgTo(event,'imgLeftImg','phL')"/>
+          <input type="file" id="imgM" accept="image/*" onchange="loadImgTo(event,'phatImg','phatPh')"/>
+          <input type="file" id="imgR" accept="image/*" onchange="loadImgTo(event,'imgRightImg','phR')"/>
 
           <!-- Nến + Bình + Lư -->
           <div class="icf-row">
@@ -470,13 +476,12 @@ body{
   <!-- Chỉ báo nhạc -->
   <div class="music-bar" id="musicBar">
     <div class="mdot" id="mdot"></div>
-    <span id="musicTxt">Nhạc thiền đang phát...</span>
+    <span id="musicTxt">🎵 Nhạc thiền đang phát...</span>
   </div>
 
   <!-- Buttons -->
   <div class="btn-row">
     <button class="mbtn" onclick="thapHuong()">🔔 Lạy Phật — Thắp Hương</button>
-    <button class="sbtn" id="musicBtn" onclick="toggleMusic()">🎵 Bật nhạc thiền</button>
   </div>
 
   <!-- Đếm -->
@@ -569,7 +574,6 @@ function thapHuong() {
 
   addIncToLu();
   litSmoke();
-  if (!musicOn) startMusic();
   playSound('bell');
   showToast(PRAYERS[prayerIdx++ % PRAYERS.length]);
 }
@@ -632,51 +636,51 @@ function playSound(type) {
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3.5);
       o.start(); o.stop(ctx.currentTime + 3.5);
     } else {
-      // Mõ: sine bass + percussive click
-      [[220, 0.2], [330, 0.1]].forEach(([freq, vol]) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.type = 'sine'; o.frequency.value = freq;
-        g.gain.setValueAtTime(vol, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-        o.start(); o.stop(ctx.currentTime + 0.65);
-      });
-      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+      // Mõ chùa VN: gỗ rỗng, âm "tóc" ngắn gọn, decay nhanh
+      const sr = ctx.sampleRate;
+      const dur = 0.35;
+      const buf = ctx.createBuffer(1, sr * dur, sr);
       const data = buf.getChannelData(0);
-      for (let i = 0; i < data.length; i++)
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 4) * 0.4;
+      // Layered: thân gỗ rỗng (200Hz) + click đầu + overtone
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr;
+        const env = Math.exp(-t * 18);          // decay rất nhanh
+        const env2 = Math.exp(-t * 6);          // thân kéo dài hơn chút
+        const click = (i < sr * 0.004) ? (Math.random() * 2 - 1) * 0.6 : 0;
+        const body = Math.sin(2 * Math.PI * 210 * t) * env2 * 0.35
+                   + Math.sin(2 * Math.PI * 420 * t) * env * 0.15
+                   + Math.sin(2 * Math.PI * 630 * t) * env * 0.07;
+        data[i] = click + body;
+      }
       const src = ctx.createBufferSource();
-      src.buffer = buf; src.connect(ctx.destination); src.start();
+      const gain = ctx.createGain();
+      gain.gain.value = 1.1;
+      src.buffer = buf;
+      src.connect(gain); gain.connect(ctx.destination);
+      src.start();
     }
   } catch (e) { /* browser blocked */ }
 }
 
 /* ============================================================
-   MUSIC
+   MUSIC — tự bật khi người dùng tương tác lần đầu
 ============================================================ */
+let musicStarted = false;
 function startMusic() {
+  if (musicStarted) return;
+  musicStarted = true;
   musicOn = true;
   const f = document.getElementById('ytf');
   f.src = 'https://www.youtube.com/embed/yh2h_YwILII?autoplay=1&loop=1&playlist=yh2h_YwILII&enablejsapi=1';
   f.style.display = 'block';
-  document.getElementById('musicBtn').textContent = '🔇 Tắt nhạc';
   const bar = document.getElementById('musicBar');
   bar.classList.add('on');
   document.getElementById('mdot').classList.add('pulse');
 }
-
-function toggleMusic() {
-  if (!musicOn) {
-    startMusic();
-  } else {
-    musicOn = false;
-    const f = document.getElementById('ytf');
-    f.src = ''; f.style.display = 'none';
-    document.getElementById('musicBtn').textContent = '🎵 Bật nhạc thiền';
-    document.getElementById('musicBar').classList.remove('on');
-    document.getElementById('mdot').classList.remove('pulse');
-  }
-}
+// Bật ngay khi người dùng chạm/click lần đầu (browser policy)
+['click','touchstart','keydown'].forEach(ev =>
+  document.addEventListener(ev, () => startMusic(), { once: true })
+);
 
 /* ============================================================
    WISH
@@ -703,15 +707,15 @@ function escHtml(s) {
 /* ============================================================
    IMAGE UPLOAD
 ============================================================ */
-function loadImg(e) {
+function loadImgTo(e, imgId, phId) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    const img = document.getElementById('phatImg');
+    const img = document.getElementById(imgId);
     img.src = ev.target.result;
     img.style.display = 'block';
-    document.getElementById('phatPh').style.display = 'none';
+    document.getElementById(phId).style.display = 'none';
     showToast('✨ Ảnh đã được cập nhật lên bàn thờ!');
   };
   reader.readAsDataURL(file);
