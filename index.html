@@ -382,9 +382,9 @@ body{
               <div class="ehint">✎ Thay ảnh</div>
             </div>
           </div>
-          <input type="file" id="imgL" accept="image/*" onchange="loadImgTo(event,'imgLeftImg','phL')"/>
-          <input type="file" id="imgM" accept="image/*" onchange="loadImgTo(event,'phatImg','phatPh')"/>
-          <input type="file" id="imgR" accept="image/*" onchange="loadImgTo(event,'imgRightImg','phR')"/>
+          <input type="file" id="imgL" accept="image/*" onchange="loadImgTo(event,'imgLeftImg','phL')" style="display:none"/>
+          <input type="file" id="imgM" accept="image/*" onchange="loadImgTo(event,'phatImg','phatPh')" style="display:none"/>
+          <input type="file" id="imgR" accept="image/*" onchange="loadImgTo(event,'imgRightImg','phR')" style="display:none"/>
 
           <!-- Nến + Bình + Lư -->
           <div class="icf-row">
@@ -636,28 +636,32 @@ function playSound(type) {
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3.5);
       o.start(); o.stop(ctx.currentTime + 3.5);
     } else {
-      // Mõ chùa VN: gỗ rỗng, âm "tóc" ngắn gọn, decay nhanh
-      const sr = ctx.sampleRate;
-      const dur = 0.35;
-      const buf = ctx.createBuffer(1, sr * dur, sr);
-      const data = buf.getChannelData(0);
-      // Layered: thân gỗ rỗng (200Hz) + click đầu + overtone
-      for (let i = 0; i < data.length; i++) {
-        const t = i / sr;
-        const env = Math.exp(-t * 18);          // decay rất nhanh
-        const env2 = Math.exp(-t * 6);          // thân kéo dài hơn chút
-        const click = (i < sr * 0.004) ? (Math.random() * 2 - 1) * 0.6 : 0;
-        const body = Math.sin(2 * Math.PI * 210 * t) * env2 * 0.35
-                   + Math.sin(2 * Math.PI * 420 * t) * env * 0.15
-                   + Math.sin(2 * Math.PI * 630 * t) * env * 0.07;
-        data[i] = click + body;
+      // Mõ thật — dùng file mo.mp3 cùng thư mục
+      if (!window._moBuffer) {
+        fetch('mo.mp3')
+          .then(r => r.arrayBuffer())
+          .then(ab => ctx.decodeAudioData(ab))
+          .then(decoded => {
+            window._moBuffer = decoded;
+            const src = ctx.createBufferSource();
+            src.buffer = decoded;
+            src.connect(ctx.destination);
+            src.start();
+          })
+          .catch(() => {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.type = 'sine'; o.frequency.value = 320;
+            g.gain.setValueAtTime(0.3, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            o.start(); o.stop(ctx.currentTime + 0.4);
+          });
+      } else {
+        const src = ctx.createBufferSource();
+        src.buffer = window._moBuffer;
+        src.connect(ctx.destination);
+        src.start();
       }
-      const src = ctx.createBufferSource();
-      const gain = ctx.createGain();
-      gain.gain.value = 1.1;
-      src.buffer = buf;
-      src.connect(gain); gain.connect(ctx.destination);
-      src.start();
     }
   } catch (e) { /* browser blocked */ }
 }
